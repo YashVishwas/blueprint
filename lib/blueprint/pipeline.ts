@@ -8,6 +8,7 @@ import { detectFlows } from './flows'
 import { compress } from './compress'
 import { explain, applyNarration, type ExplainResult } from './explain'
 import { cacheGet, cacheSet, makeCacheKey } from './cache'
+import { selectReadFirstStructural } from './importance'
 
 export interface PipelineOptions {
   url: string
@@ -91,7 +92,9 @@ export async function runPipeline(options: PipelineOptions): Promise<Blueprint> 
 
   // Build a quick zone summary for the initial canvas render
   const quickZones = buildQuickZones(classified)
-  emit(emitter, 'classify.done', { zones: quickZones })
+  // Structural readFirst is available immediately — no graph needed
+  const quickReadFirst = selectReadFirstStructural(classified, snapshot.tree)
+  emit(emitter, 'classify.done', { zones: quickZones, readFirst: quickReadFirst })
 
   // ── 6. Parse (TS/JS only) ────────────────────────────────────────────────────
   const parsed2 = await parseFiles(snapshot, classified)
