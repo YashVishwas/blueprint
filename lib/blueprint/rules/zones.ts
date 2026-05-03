@@ -200,6 +200,31 @@ export const ZONE_RULES: ZoneRule[] = [
     ],
   },
 
+  // ── External Systems ────────────────────────────────────────────────────────
+  // Directories that explicitly wrap third-party services or APIs.
+  // Lower weight (0.7) because adapters/clients can be internal too — the graph
+  // stage resolves the definitive external list from npm/pip import names.
+  {
+    zone: 'external',
+    weight: 0.7,
+    patterns: [
+      'integrations/**',
+      'src/integrations/**',
+      'providers/**',
+      'src/providers/**',
+      'adapters/**',
+      'src/adapters/**',
+      'connectors/**',
+      'src/connectors/**',
+      'third-party/**',
+      'api-clients/**',
+      'src/api-clients/**',
+      // Python
+      '**/integrations.py',
+      '**/providers.py',
+    ],
+  },
+
   // ── Platform / Runtime ───────────────────────────────────────────────────────
   {
     zone: 'platform',

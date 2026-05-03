@@ -34,6 +34,7 @@ export function BlueprintView({ owner, repo, mode }: BlueprintViewProps) {
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null)
   const [quickZones, setQuickZones] = useState<Zone[]>([])
   const [quickFlows, setQuickFlows] = useState<Flow[]>([])
+  const [quickReadFirst, setQuickReadFirst] = useState<string[]>([])
   const [inventory, setInventory] = useState<Blueprint['inventory'] | null>(null)
   const [progress, setProgress] = useState<ProgressEvent[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +75,10 @@ export function BlueprintView({ owner, repo, mode }: BlueprintViewProps) {
     })
 
     evtSource.addEventListener('classify.done', (e: MessageEvent) => {
-      const data = JSON.parse(e.data) as { zones: Array<{ id: string; fileCount: number; folders: string[] }> }
+      const data = JSON.parse(e.data) as {
+        zones: Array<{ id: string; fileCount: number; folders: string[] }>
+        readFirst?: string[]
+      }
 
       // Build quick zones for fast canvas render
       const zones: Zone[] = data.zones.map(z => ({
@@ -87,6 +91,7 @@ export function BlueprintView({ owner, repo, mode }: BlueprintViewProps) {
         confidence: 0.6,
       }))
       setQuickZones(zones)
+      if (data.readFirst && data.readFirst.length > 0) setQuickReadFirst(data.readFirst)
       setState('fast_map')
       addProgress('classify', 'Zones classified', 'done')
     })
@@ -151,6 +156,7 @@ export function BlueprintView({ owner, repo, mode }: BlueprintViewProps) {
 
   const displayZones = blueprint?.zones ?? quickZones
   const displayFlows = blueprint?.flows ?? quickFlows
+  const displayReadFirst = blueprint?.readFirst ?? (quickReadFirst.length > 0 ? quickReadFirst : null)
   const repoUrl = `https://github.com/${owner}/${repo}`
   const isEnriching = state === 'fast_map'
 
@@ -299,10 +305,10 @@ export function BlueprintView({ owner, repo, mode }: BlueprintViewProps) {
                 </div>
               )}
 
-              {/* Read first */}
-              {blueprint?.readFirst && blueprint.readFirst.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                  <ReadFirstStrip files={blueprint.readFirst} repoUrl={repoUrl} />
+              {/* Read first — shown as soon as structural analysis completes (~5s) */}
+              {displayReadFirst && displayReadFirst.length > 0 && (
+                <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 ${isEnriching ? 'opacity-80' : ''}`}>
+                  <ReadFirstStrip files={displayReadFirst} repoUrl={repoUrl} />
                 </div>
               )}
 
